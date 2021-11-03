@@ -2,7 +2,7 @@ const express = require('express');
 const socketIO = require('socket.io');
 const app = express();
 const http = require('http');
-const HOST_BACKEND = require('./hostBackend.js');
+// const HOST_BACKEND = require('./hostBackend.js');
 const server = http.createServer(app);
 
 app.get('/', (req, res) => {
