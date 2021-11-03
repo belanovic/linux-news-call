@@ -6,7 +6,7 @@ const http = require('http');
 const server = http.createServer(app);
 
 app.get('/', (req, res) => {
-    res.status(200).send('Hello World');
+    res.status(200).send('Hello to the whole World');
 })
 
 const io = socketIO(server, {
