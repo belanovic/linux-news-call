@@ -19,8 +19,10 @@ const io = socketIO(server, {
 });
 
 io.on('connection', async (socket) => {
+    console.log('connected')
 })
 
 const port = process.env.PORT || 4002;
+HOST_BACKEND = process.env.HOST_BACKEND || 'localhost';
 server.listen(port, HOST_BACKEND, () => console.log(`Listening on port ${port}`));
 
