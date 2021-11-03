@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
     "upload": "git add . && git commit -m 'msg' && git push -u origin main"
   },
   "author": "",
