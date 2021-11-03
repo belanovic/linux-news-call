@@ -8,6 +8,10 @@ const HOST_BACKEND = require('./hostBackend.js');
 
 const server = http.createServer(app);
 
+app.get('/', (req, res) => {
+    res.status(200).send('Hello World');
+})
+
 const io = socketIO(server, {
   cors: {
     origin: "*",
