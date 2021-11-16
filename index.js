@@ -20,14 +20,13 @@ const io = socketIO(server, {
 
 io.on('connection', async (socket) => {
 
-    socket.on('create or join', (room) => {
+    socket.on('create', (room) => {
+      socket.join(room);
+    })
+
+/*     socket.on('create', (room) => {
       const myRoom = io.sockets.adapter.rooms.get(room) || {size: 0};
       
-    /*   if(io.sockets.adapter.rooms.get(room)) {
-        console.log(room)
-        socket.leave(room);
-      }  */
-
       const numClientsRoom = myRoom.size;
 
       if(numClientsRoom == 0) {
@@ -39,13 +38,32 @@ io.on('connection', async (socket) => {
       } else if (numClientsRoom == 2) {
         socket.emit('full', room);
       }
+    }) */
+
+
+    socket.on('join', (room) => {
+      const myRoom = io.sockets.adapter.rooms.get(room) || {size: 0};
+      
+      const numClientsRoom = myRoom.size;
+
+      if(numClientsRoom == 1) {
+        socket.join(room);
+        socket.emit('joined', room);
+      } else if (numClientsRoom == 2) {
+        socket.emit('full', room);
+      }
     })
 
-    socket.on('leave', (room) => {
-      socket.leave(room);
-      console.log(room)
+    socket.on('calling', (room) => {
+      socket.broadcast.to(room).emit('calling', room)
     })
 
+    socket.on('accept', (room) => {
+      socket.emit('accept', room)
+    })
+    socket.on('reject', (room) => {
+      socket.broadcast.to(room).emit('reject', room)
+    })
 
     socket.on('ready', (room) => {
       console.log('roosdfsdfsm');
@@ -63,6 +81,16 @@ io.on('connection', async (socket) => {
     socket.on('answer', (event) => {
       socket.broadcast.to(event.room).emit('answer', event.sdp)
       console.log('evo ga answer')
+    })
+    socket.on('end', (room) => {
+      io.in(room).emit('end');
+      console.log('evo ga end');
+    })
+
+    
+    socket.on('leave', (room) => {
+      socket.leave(room);
+      console.log(room)
     })
 })
 
