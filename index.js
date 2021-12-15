@@ -2,7 +2,7 @@ const express = require('express');
 const socketIO = require('socket.io');
 const app = express();
 const http = require('http');
-////// const HOST_BACKEND = require('./hostBackend.js');
+///////// const HOST_BACKEND = require('./hostBackend.js');
 const server = http.createServer(app);
 
 app.get('/', (req, res) => {
@@ -18,44 +18,43 @@ const io = socketIO(server, {
   }
 });
 
+let usersServer = [];
+
 io.on('connection', async (socket) => {
 
     socket.on('create', (room) => {
       socket.join(room);
-    })
-
-/*     socket.on('create', (room) => {
-      const myRoom = io.sockets.adapter.rooms.get(room) || {size: 0};
-      
-      const numClientsRoom = myRoom.size;
-
-      if(numClientsRoom == 0) {
-        socket.join(room);
-        socket.emit('created', room);
-      } else if(numClientsRoom == 1) {
-        socket.join(room);
-        socket.emit('joined', room);
-      } else if (numClientsRoom == 2) {
-        socket.emit('full', room);
+      const usersServerHasRoom = usersServer.some((prom) => prom === room);
+      console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
+      if(!usersServerHasRoom) {
+            console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
+           usersServer.push(room);
+           io.emit('reloadUsers', usersServer);
       }
-    }) */
-
+      io.emit('reloadUsers', usersServer);
+      console.log('create' + ' ' + room)
+    })
 
     socket.on('join', (room) => {
       const myRoom = io.sockets.adapter.rooms.get(room) || {size: 0};
       
       const numClientsRoom = myRoom.size;
 
+      console.log('join' + ' ' + room + ' ' + numClientsRoom)
+
       if(numClientsRoom == 1) {
         socket.join(room);
         socket.emit('joined', room);
+        console.log('joined' + ' ' + room)
       } else if (numClientsRoom == 2) {
         socket.emit('full', room);
+        console.log('full' + ' ' + room)
       }
     })
 
     socket.on('calling', (room) => {
       socket.broadcast.to(room).emit('calling', room)
+      console.log('calling' + ' ' + room)
     })
 
     socket.on('accept', (room) => {
@@ -86,11 +85,18 @@ io.on('connection', async (socket) => {
       io.in(room).emit('end');
       console.log('evo ga end');
     })
-
     
-    socket.on('leave', (room) => {
+    socket.on('leaveRoom', (room) => {
       socket.leave(room);
-      console.log(room)
+      console.log(room);
+    })
+    socket.on('leaveCall', (user) => {
+      console.log(user);
+      const indexRoom = usersServer.indexOf(user);
+      console.log(indexRoom);
+      const d = usersServer.splice(indexRoom, 1);
+      console.log(d);
+      io.emit('leftCall', usersServer)
     })
 })
 
