@@ -34,7 +34,7 @@ io.on('connection', async (socket) => {
 
       if(newRoom.size === 0) {
         socket.join(room);
-        console.log('createee' + ' ' + room)
+        console.log('createeeee' + ' ' + room)
       }
 
       const usersServerHasRoom = usersServer.some((prom) => prom === room);
