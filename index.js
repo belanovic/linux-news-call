@@ -19,20 +19,32 @@ const io = socketIO(server, {
 });
 
 let usersServer = [];
+let busyCallers = []
 
 io.on('connection', async (socket) => {
+  console.log('connected' + ' ' + socket.id);
+  socket.on("disconnect", (reason) => {
+    console.log('disconnected' + ' ' + socket.id);
+    socket.emit('bla')
+  });
 
     socket.on('create', (room) => {
-      socket.join(room);
+
+      const newRoom = io.sockets.adapter.rooms.get(room) || {size: 0};
+
+      if(newRoom.size === 0) {
+        socket.join(room);
+        console.log('create' + ' ' + room)
+      }
+
       const usersServerHasRoom = usersServer.some((prom) => prom === room);
       console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
       if(!usersServerHasRoom) {
-            console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
-           usersServer.push(room);
-           io.emit('reloadUsers', usersServer);
+          console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
+          usersServer.push(room);
+          io.emit('reloadUsers', usersServer);
       }
       io.emit('reloadUsers', usersServer);
-      console.log('create' + ' ' + room)
     })
 
     socket.on('join', (room) => {
