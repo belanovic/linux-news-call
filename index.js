@@ -42,7 +42,7 @@ io.on('connection', async (socket) => {
       if(!usersServerHasRoom) {
           console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
           usersServer.push(room);
-          io.emit('reloadUsers', usersServer);
+          io.emit('reloadUsers', usersServer); 
       }
       io.emit('reloadUsers', usersServer);
     })
