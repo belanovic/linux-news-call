@@ -135,12 +135,12 @@ io.on('connection', async (socket) => {
       io.emit('reloadUsers', roomsActive);
     })
   /*   socket.on('login', (user) => {
-      roomsActive.push(user);
+      roomsActive.push(user); 
       io.emit('reloadUsers', roomsActive);
       console.log('roomsActive posle login ' + roomsActive)
     }) */
 })
-
+ 
 const port = process.env.PORT || 4002;
 const HOST_BACKEND = process.env.HOST_BACKEND || 'localhost';
 server.listen(port, HOST_BACKEND, () => console.log(`Listening on port ${port}`));
