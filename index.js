@@ -18,98 +18,127 @@ const io = socketIO(server, {
   }
 });
 
-let usersServer = [];
-let busyCallers = []
+const removeFromArray = function(arr, elem) {
+  const indexElem = arr.indexOf(elem);
+  const removed = arr.splice(indexElem, 1);
+
+  return removed
+}
+
+var roomsActive = [];
 
 io.on('connection', async (socket) => {
-  console.log('connected' + ' ' + socket.id);
+
+
+  socket.on("disconnecting", (reason) => {
+    if(socket.name) {io.emit('oneDisconnected', socket.name)}
+  });
   socket.on("disconnect", (reason) => {
-    console.log('disconnected' + ' ' + socket.id);
-    socket.emit('bla')
+
+    roomsActive.forEach((prom) => {                         // soket je na diskonekt izbačen iz sobe, a ako je bio poslednji u njoj, 
+      const roomFound = io.sockets.adapter.rooms.get(prom); // soba se automatski briše iz rooms Map-a. U lupu proveravam 
+      if(!roomFound) {                                      // da li se neka soba iz Array roomsActive ne nalazi u rooms Map-u. 
+        removeFromArray(roomsActive, prom);                 // Ako je nema, brisem je iz roomsActive, i saljem svim soketima
+        io.emit('reloadUsers', roomsActive);                // da bi azurirali listu soba, odnosto konektovanih korisnika
+      }
+    })
   });
 
     socket.on('create', (room) => {
+     const someSocketInRoom = io.sockets.adapter.rooms.get(room);
 
-      const newRoom = io.sockets.adapter.rooms.get(room) || {size: 0};
+     if(!someSocketInRoom) {
+      socket.join(room);
+      socket.name = room;
+      socket.emit('created');
+     }  else {
+          if(socket.name === room) {
+            socket.emit('roomAlreadyCreatedByThisSocket', room);
+          } else {
+            socket.emit('roomAlreadyCreatedByAnotherSocket', room);
+          }
+        }
+      
+      const roomsActiveHasRoom = roomsActive.some((prom) => prom === room);
 
-      if(newRoom.size === 0) {
-        socket.join(room);
-        console.log('createeeee' + ' ' + room)
+      if(!roomsActiveHasRoom) {
+
+          roomsActive.push(room);
+
+          io.emit('reloadUsers', roomsActive);
       }
+      io.emit('reloadUsers', roomsActive);
 
-      const usersServerHasRoom = usersServer.some((prom) => prom === room);
-      console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
-      if(!usersServerHasRoom) {
-          console.log('usersServerHasRoom' + ' ' + usersServerHasRoom)
-          usersServer.push(room);
-          io.emit('reloadUsers', usersServer); 
-      }
-      io.emit('reloadUsers', usersServer);
     })
 
     socket.on('join', (room) => {
-      const myRoom = io.sockets.adapter.rooms.get(room) || {size: 0};
+
+      const roomToJoin = io.sockets.adapter.rooms.get(room);
       
-      const numClientsRoom = myRoom.size;
-
-      console.log('join' + ' ' + room + ' ' + numClientsRoom)
-
-      if(numClientsRoom == 1) {
-        socket.join(room);
-        socket.emit('joined', room);
-        console.log('joined' + ' ' + room)
-      } else if (numClientsRoom == 2) {
-        socket.emit('full', room);
-        console.log('full' + ' ' + room)
-      }
+        if(!roomToJoin) return;
+        
+        if(roomToJoin.size === 2) {
+          socket.emit('roomIsBusy', room);
+        }
+        if(roomToJoin.size === 1) {
+          const socketInRoomToJoinID = roomToJoin.values().next().value;
+          const numOfRoomsSocketIsIn = io.sockets.sockets.get(socketInRoomToJoinID).rooms.size;
+          if(numOfRoomsSocketIsIn === 2) {
+            socket.join(room);
+            socket.emit('joined', room);
+          } else if (numOfRoomsSocketIsIn === 3) {
+            socket.emit('roomIsBusy', room);
+          }
+          
+        }
     })
 
-    socket.on('calling', (room) => {
-      socket.broadcast.to(room).emit('calling', room)
-      console.log('calling' + ' ' + room)
+    socket.on('calling', (room, caller) => {
+      io.in(room).emit('calling', room, caller);
     })
 
-    socket.on('accept', (room) => {
+    socket.on('accept', (room) => { 
       socket.emit('accept', room)
     })
     socket.on('reject', (room) => {
-      socket.broadcast.to(room).emit('reject', room)
+      socket.broadcast.to(room).emit('rejectToCaller', room);
+      socket.emit('rejectToCallee', room);
     })
 
     socket.on('ready', (room) => {
-      console.log('roosdfsdfsm');
       socket.broadcast.to(room).emit('ready')
     })
     socket.on('candidate', (event) => {
       socket.broadcast.to(event.room).emit('candidate', event)
-      console.log('evo ga kandidat')
     })
     socket.on('offer', (event) => {
-      console.log('evo me offer emit');
-      console.log(event.room);
       socket.broadcast.to(event.room).emit('offer', event.sdp)
     })
     socket.on('answer', (event) => {
       socket.broadcast.to(event.room).emit('answer', event.sdp)
-      console.log('evo ga answer')
     })
-    socket.on('end', (room) => {
-      io.in(room).emit('end');
-      console.log('evo ga end');
+    socket.on('endTalk', (room) => {
+      io.in(room).emit('endTalk', room);
+    })
+    socket.on('abort', (room) => {
+      io.in(room).emit('abort', room);
     })
     
     socket.on('leaveRoom', (room) => {
       socket.leave(room);
-      console.log(room);
     })
-    socket.on('leaveCall', (user) => {
-      console.log(user);
-      const indexRoom = usersServer.indexOf(user);
-      console.log(indexRoom);
-      const d = usersServer.splice(indexRoom, 1);
-      console.log(d);
-      io.emit('leftCall', usersServer)
+    socket.on('logout', (user) => {
+
+      io.in(user).socketsLeave(user);
+
+      removeFromArray(roomsActive, user);
+      io.emit('reloadUsers', roomsActive);
     })
+  /*   socket.on('login', (user) => {
+      roomsActive.push(user);
+      io.emit('reloadUsers', roomsActive);
+      console.log('roomsActive posle login ' + roomsActive)
+    }) */
 })
 
 const port = process.env.PORT || 4002;
