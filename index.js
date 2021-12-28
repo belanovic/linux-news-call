@@ -2,11 +2,11 @@ const express = require('express');
 const socketIO = require('socket.io');
 const app = express();
 const http = require('http');
-///////// const HOST_BACKEND = require('./hostBackend.js');
+///////// const HOST_BACKEND = require('./hostBackend.js');   
 const server = http.createServer(app);
 
 app.get('/', (req, res) => {
-    res.status(200).send('Hello to the whole World');
+    res.status(200).send('Hello to the whole World');  
 })
 
 const io = socketIO(server, {
@@ -17,6 +17,7 @@ const io = socketIO(server, {
     credentials: true
   }
 });
+
 
 const removeFromArray = function(arr, elem) {
   const indexElem = arr.indexOf(elem);
@@ -93,8 +94,8 @@ io.on('connection', async (socket) => {
         }
     })
 
-    socket.on('calling', (room, caller) => {
-      io.in(room).emit('calling', room, caller);
+    socket.on('calling', (room, caller, constraints) => {
+      io.in(room).emit('calling', room, caller, constraints);
     })
 
     socket.on('accept', (room) => { 
