@@ -8,7 +8,7 @@ const server = http.createServer(app);
 app.get('/', (req, res) => {
     res.status(200).send('Hello to the whole World');  
 })
-
+ 
 const io = socketIO(server, {
   cors: {
     origin: "*",   
@@ -36,7 +36,7 @@ io.on('connection', async (socket) => {
   });
   socket.on("disconnect", (reason) => {
 
-    roomsActive.forEach((prom) => {                         // soket je na diskonekt izbačen iz sobe, a ako je bio poslednji u njoj, 
+    roomsActive.forEach((prom) => {                         // soket je naa diskonekt izbačen iz sobe, a ako je bio poslednji u njoj, 
       const roomFound = io.sockets.adapter.rooms.get(prom); // soba se automatski briše iz rooms Map-a. U lupu proveravam 
       if(!roomFound) {                                      // da li se neka soba iz Array roomsActive ne nalazi u rooms Map-u. 
         removeFromArray(roomsActive, prom);                 // Ako je nema, brisem je iz roomsActive, i saljem svim soketima
@@ -91,12 +91,12 @@ io.on('connection', async (socket) => {
             socket.emit('roomIsBusy', room);
           }
           
-        }
-    })
+        }  
+    })   
 
     socket.on('calling', (room, caller, constraints) => {
       io.in(room).emit('calling', room, caller, constraints);
-    })
+    })  
 
     socket.on('accept', (room) => { 
       socket.emit('accept', room)
