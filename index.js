@@ -40,11 +40,12 @@ io.on('connection', async (socket) => {
       const roomFound = io.sockets.adapter.rooms.get(prom); // soba se automatski briše iz rooms Map-a. U lupu proveravam 
       if(!roomFound) {                                      // da li se neka soba iz Array roomsActive ne nalazi u rooms Map-u. 
         removeFromArray(roomsActive, prom);                 // Ako je nema, brisem je iz roomsActive, i saljem svim soketima
-        io.emit('reloadUsers', roomsActive);                // da bi azurirali listu soba, odnosto konektovanih korisnika
+        io.emit('reloadUsers', roomsActive);                 // da bi azurirali listu soba, odnosto konektovanih korisnika
       }
     })
   });
 
+  
     socket.on('create', (room) => {
      const someSocketInRoom = io.sockets.adapter.rooms.get(room);
 
