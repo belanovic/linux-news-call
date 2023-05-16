@@ -17,7 +17,7 @@ const io = socketIO(server, {
     credentials: true
   }
 });
-
+//
 
 const removeFromArray = function(arr, elem) {
   const indexElem = arr.indexOf(elem);
