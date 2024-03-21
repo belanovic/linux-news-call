@@ -2,40 +2,32 @@ const express = require('express');
 const socketIO = require('socket.io');
 const app = express();
 const http = require('http');
-///////// const HOST_BACKEND = require('./hostBackend.js');   
 const server = http.createServer(app);
+const config = require('config');
 
-app.get('/', (req, res) => {
-    res.status(200).send('Hello to the whole World');  
-})
- 
 const io = socketIO(server, {
   cors: {
-    origin: "*",   
+    origin: "*",
     methods: ["GET", "POST"], 
     allowedHeaders: ["my-custom-header"], 
     credentials: true
   }
 });
-//
 
 const removeFromArray = function(arr, elem) {
   const indexElem = arr.indexOf(elem);
   const removed = arr.splice(indexElem, 1);
-
   return removed
 }
-
-var roomsActive = [];
+let roomsActive = [];
 
 io.on('connection', async (socket) => {
-
 
   socket.on("disconnecting", (reason) => {
     if(socket.name) {io.emit('oneDisconnected', socket.name)}
   });
-  socket.on("disconnect", (reason) => {
 
+  socket.on("disconnect", (reason) => {
     roomsActive.forEach((prom) => {                         // soket je naa diskonekt izbačen iz sobe, a ako je bio poslednji u njoj, 
       const roomFound = io.sockets.adapter.rooms.get(prom); // soba se automatski briše iz rooms Map-a. U lupu proveravam 
       if(!roomFound) {                                      // da li se neka soba iz Array roomsActive ne nalazi u rooms Map-u. 
@@ -143,7 +135,8 @@ io.on('connection', async (socket) => {
     }) */
 })
  
-const port = process.env.PORT || 4002;
-const HOST_BACKEND = process.env.HOST_BACKEND || 'localhost';
-server.listen(port, HOST_BACKEND, () => console.log(`Listening on port ${port}`));
+const hostIP = config.get('hostIP');
+const port = process.env.PORT || 4002; 
+
+server.listen(port, hostIP, () => console.log(`Listening on port ${port}`));
 
